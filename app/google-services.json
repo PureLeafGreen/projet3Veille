@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "481665717636",
+    "project_id": "socialvocal-d5332",
+    "storage_bucket": "socialvocal-d5332.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:481665717636:android:396d00791f6f3665fd39d1",
+        "android_client_info": {
+          "package_name": "com.example.socialvocal"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBtIlzbwjLpYKGh6h4OxMrfa31ozGHRlek"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
