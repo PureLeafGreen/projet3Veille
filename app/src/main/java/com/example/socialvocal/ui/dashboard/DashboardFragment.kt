@@ -8,6 +8,7 @@ import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.example.socialvocal.databinding.FragmentDashboardBinding
+import android.media.MediaRecorder
 
 class DashboardFragment : Fragment() {
 
