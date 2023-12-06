@@ -44,7 +44,8 @@ class DashboardFragment : Fragment() {
         Manifest.permission.WRITE_EXTERNAL_STORAGE
     )
     private val REQUEST_CODE_PERMISSION = 1001 // You can use any unique value here
-
+    private var retrievedFiles = mutableListOf<File>()
+    private var file: File? = null
 
     override fun onCreateView(
             inflater: LayoutInflater,
@@ -119,8 +120,8 @@ class DashboardFragment : Fragment() {
     private fun retrieveFileFromLocalStorage(fileName: String): ByteArray? {
         try {
             val filesDir = requireContext().filesDir
-            val file = File(filesDir, fileName)
-            Log.d("file", file.name)
+            file = File(filesDir, fileName)
+            Log.d("file", file!!.name)
             val inputStream = FileInputStream(file)
             val bytes = inputStream.readBytes()
             inputStream.close()
