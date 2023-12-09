@@ -39,13 +39,11 @@ class DashboardFragment : Fragment() {
         AudioFormat.CHANNEL_IN_MONO,
         AudioFormat.ENCODING_PCM_16BIT
     )
-    private val permissions = arrayOf(
-        Manifest.permission.RECORD_AUDIO,
-        Manifest.permission.WRITE_EXTERNAL_STORAGE
-    )
     private val REQUEST_CODE_PERMISSION = 1001 // You can use any unique value here
     private var retrievedFiles = mutableListOf<File>()
     private var file: File? = null
+    private lateinit var filesDir: File
+    var numberOfFiles = 0
 
     override fun onCreateView(
             inflater: LayoutInflater,
@@ -71,6 +69,8 @@ class DashboardFragment : Fragment() {
         // Find your button by its ID
         val recordButton: Button = view.findViewById(R.id.button)
 
+        filesDir = requireContext().filesDir
+        numberOfFiles = filesDir.listFiles()?.size ?: 0
         // Set an OnClickListener to the button
         recordButton.setOnClickListener {
             // Call your function here when the button is pressed
@@ -78,14 +78,13 @@ class DashboardFragment : Fragment() {
         }
     }
     private fun startRecording() {
-        //ask for permissions
-        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(requireActivity(), arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), REQUEST_CODE_PERMISSION)
-            return
-        }
         if (!isRecording) {
-            val filesDir = requireContext().filesDir
-            outputFile = File(filesDir, "audio_record.txt")
+            if (numberOfFiles == 0) {
+                numberOfFiles = 1
+            } else {
+                numberOfFiles++
+            }
+            outputFile = File(filesDir, "audio_record${numberOfFiles}.pcm")
             val audioData = ByteArray(bufferSize)
             recorder?.startRecording()
             isRecording = true
@@ -93,14 +92,14 @@ class DashboardFragment : Fragment() {
                 try {
                     val outputStream = FileOutputStream(outputFile)
                     while (isRecording) {
-//                        val numberOfBytes = recorder?.read(audioData, 0, bufferSize)
-//                        if (numberOfBytes != null) {
-//                            outputStream.write(audioData, 0, numberOfBytes)
-//                        }
-                        //random byte
-                        val randomByte = Random.nextInt(0, 255).toByte()
-                        outputStream.write(randomByte.toInt())
-                        Log.d("send", String(byteArrayOf(randomByte)))
+                        val numberOfBytes = recorder?.read(audioData, 0, bufferSize)
+                        if (numberOfBytes != null) {
+                            outputStream.write(audioData, 0, numberOfBytes)
+                        }
+//                        //random byte
+//                        val randomByte = Random.nextInt(0, 255).toByte()
+//                        outputStream.write(randomByte.toInt())
+                        Log.d("send", String(byteArrayOf(numberOfBytes?.toByte() ?: 0)))
                     }
                     outputStream.close()
                 } catch (e: IOException) {
@@ -113,15 +112,19 @@ class DashboardFragment : Fragment() {
             recorder?.stop()
             recorder?.release()
             binding.button.text = "Enregistrer"
-            retrieveFileFromLocalStorage("audio_record.txt")
         }
     }
 
     private fun retrieveFileFromLocalStorage(fileName: String): ByteArray? {
         try {
-            val filesDir = requireContext().filesDir
             file = File(filesDir, fileName)
-            Log.d("file", file!!.name)
+//            Log.d("file", filesDir.listFiles()?.forEach {
+//                Log.d("file", it.delete().toString())
+//          }.toString())
+            Log.d("file", file!!.toString())
+            Log.d("file", file!!.readBytes().toString())
+            Log.d("file", file!!.delete().toString())
+            Log.d("file", filesDir.listFiles()?.size.toString())
             val inputStream = FileInputStream(file)
             val bytes = inputStream.readBytes()
             inputStream.close()
@@ -133,8 +136,23 @@ class DashboardFragment : Fragment() {
         return null
     }
 
+    private fun getAllFilesNames(): List<String> {
+        val files = mutableListOf<String>()
+        filesDir.listFiles()?.forEach {
+            files.add(it.name)
+        }
+        return files
+    }
 
+    private fun deleteAllFiles() {
+        filesDir.listFiles()?.forEach {
+            it.delete()
+        }
+    }
 
+    private fun deleteFile(fileName: String) {
+        File(filesDir, fileName).delete()
+    }
 
     override fun onDestroyView() {
         super.onDestroyView()
