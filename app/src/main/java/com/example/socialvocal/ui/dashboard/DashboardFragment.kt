@@ -69,10 +69,11 @@ class DashboardFragment : Fragment() {
 
         // Find your button by its ID
         val recordButton: Button = view.findViewById(R.id.button)
-        val rvAudio = view.findViewById<RecyclerView>(R.id.AudioRecycler)
-        val adapter = AudioAdapter(getAllFilesNames())
+        val rvAudio = view.findViewById(R.id.AudioRecycler) as RecyclerView
+        val list = listOf("test1", "test2", "test3")
+        val adapter = AudioAdapter(list)
         rvAudio.adapter = adapter
-        rvAudio.layoutManager = LinearLayoutManager(requireContext())
+        rvAudio.layoutManager = LinearLayoutManager(this.context)
         filesDir = requireContext().filesDir
         numberOfFiles = filesDir.listFiles()?.size ?: 0
         // Set an OnClickListener to the button

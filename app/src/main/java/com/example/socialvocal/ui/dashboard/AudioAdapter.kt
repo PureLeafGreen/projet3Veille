@@ -1,56 +1,38 @@
-package com.example.socialvocal.ui.dashboard;
+package com.example.socialvocal.ui.dashboard
 
-import android.content.Context;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.TextView;
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.RecyclerView;
-import com.example.socialvocal.R;
-import org.jetbrains.annotations.NotNull;
+import android.content.Context
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.TextView
+import androidx.recyclerview.widget.RecyclerView
+import com.example.socialvocal.R
 
-import java.util.List;
-
-public class AudioAdapter extends RecyclerView.Adapter<AudioAdapter.ViewHolder> {
-    private List<String> FileNameList;
-    public AudioAdapter(List<String> fileNameList) {
-        FileNameList = fileNameList;
+class AudioAdapter(private val fileNameList: List<String>) : RecyclerView.Adapter<AudioAdapter.ViewHolder>() {
+    inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val textView: TextView = itemView.findViewById(R.id.AudioFile)
     }
 
-    @Override
-    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        Context context = parent.getContext();
-        LayoutInflater inflater = LayoutInflater.from(context);
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val context: Context = parent.context
+        val inflater: LayoutInflater = LayoutInflater.from(context)
 
         // Inflate the custom layout
-        View AudioListView = inflater.inflate(R.layout.custom_layout_audio, parent, false);
+        val audioListView: View = inflater.inflate(R.layout.custom_layout_audio, parent, false)
 
         // Return a new holder instance
-        ViewHolder viewHolder = new ViewHolder(AudioListView);
-        return viewHolder;
+        return ViewHolder(audioListView)
     }
 
-    @Override
-    public void onBindViewHolder(AudioAdapter.ViewHolder holder, int position) {
-        String nomAudio = FileNameList.get(position);
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val nomAudio: String = fileNameList.get(position)
 
         // Set item views based on your views and data model
-        TextView textView = holder.textView;
-        textView.setText(nomAudio);
+        val textview = holder.textView
+        textview.text = nomAudio
     }
 
-    @Override
-    public int getItemCount() {
-        return FileNameList.size();
+    override fun getItemCount(): Int {
+        return fileNameList.size
     }
-
-    public static class ViewHolder extends RecyclerView.ViewHolder {
-
-            public TextView textView;
-            public ViewHolder(View view) {
-                super(view);
-                textView = (TextView) view.findViewById(R.id.AudioFile);
-            }
-        }
 }
