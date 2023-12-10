@@ -18,6 +18,8 @@ import android.os.Environment
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -55,7 +57,6 @@ class DashboardFragment : Fragment() {
 
         _binding = FragmentDashboardBinding.inflate(inflater, container, false)
         val root: View = binding.root
-
         val textView: TextView = binding.textDashboard
         dashboardViewModel.text.observe(viewLifecycleOwner) {
             textView.text = it
@@ -68,7 +69,10 @@ class DashboardFragment : Fragment() {
 
         // Find your button by its ID
         val recordButton: Button = view.findViewById(R.id.button)
-
+        val rvAudio = view.findViewById<RecyclerView>(R.id.AudioRecycler)
+        val adapter = AudioAdapter(getAllFilesNames())
+        rvAudio.adapter = adapter
+        rvAudio.layoutManager = LinearLayoutManager(requireContext())
         filesDir = requireContext().filesDir
         numberOfFiles = filesDir.listFiles()?.size ?: 0
         // Set an OnClickListener to the button

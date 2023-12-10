@@ -8,4 +8,5 @@
     <string name="vos_auditeurs">Vos auditeurs</string>
     <string name="auditeurs">Auditeurs</string>
     <string name="record">Enregistrement</string>
+    <string name="listen">Ecouter</string>
 </resources>

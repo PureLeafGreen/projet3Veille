@@ -30,14 +30,10 @@
         app:layout_constraintEnd_toEndOf="parent" app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.194"/>
-    <androidx.cardview.widget.CardView
-        android:id="@+id/AudioCardView"
-        android:layout_width="412dp" android:layout_height="614dp"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/AudioRecycler"
+        android:layout_width="408dp" android:layout_height="470dp"
         app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5" app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/button" app:layout_constraintVertical_bias="0.5">
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/AudioRecyclerView"
-            android:layout_width="match_parent" android:layout_height="match_parent"/>
-    </androidx.cardview.widget.CardView>
+        app:layout_constraintTop_toBottomOf="@+id/button" app:layout_constraintVertical_bias="0.5"/>
 </androidx.constraintlayout.widget.ConstraintLayout>
