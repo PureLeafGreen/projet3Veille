@@ -13,4 +13,5 @@
     <string name="user3">User 3</string>
     <string name="username">Username</string>
     <string name="follow">Suivre</string>
+    <string name="auditeursAudio">L\'audio des auditeurs que vous suivez</string>
 </resources>
