@@ -100,13 +100,14 @@ class DashboardFragment : Fragment() {
             )
             return
         }
+        val userFolder = File(filesDir, SessionManager.getCurrentUser()!!)
+        numberOfFiles = userFolder.listFiles()?.size ?: 0
         if (numberOfFiles == 0) {
             numberOfFiles = 1
         } else {
             numberOfFiles++
         }
         //create folder for user
-        val userFolder = File(filesDir, SessionManager.getCurrentUser()!!)
         if (!userFolder.exists()) {
             userFolder.mkdir()
         }
@@ -115,8 +116,7 @@ class DashboardFragment : Fragment() {
             setAudioSource(MediaRecorder.AudioSource.MIC)
             setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
             setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
-            setOutputFile(filesDir.absolutePath + "/${SessionManager.getCurrentUser()}/audio_record${numberOfFiles}.mp3")
-
+            setOutputFile(outputFile.absolutePath)
             try {
                 prepare()
                 start()
@@ -140,20 +140,37 @@ class DashboardFragment : Fragment() {
                 Log.e("Recording", "MediaRecorder stop/release failed: ${e.message}")
             }
         }
-        db.collection("audio").document(outputFile.name)
-            .set(mapOf("audio" to retrieveFileFromLocalStorage("audio_record${numberOfFiles}.mp3")))
-            .addOnSuccessListener {
-                Log.d("Recording", "DocumentSnapshot successfully written!")
-            }
-            .addOnFailureListener { e ->
-                Log.w("Recording", "Error writing document", e)
-            }
         binding.button.text = "Enregistrer"
         updateRecyclerView()
+        addFileToDatabase(outputFile.name)
     }
+
+    private fun addFileToDatabase(fileName: String) {
+        val userFolder = File(filesDir, SessionManager.getCurrentUser()!!)
+        val file = File(userFolder, fileName)
+        val inputStream = FileInputStream(file)
+        val bytes = inputStream.readBytes()
+        inputStream.close()
+
+        val base64String = android.util.Base64.encodeToString(bytes, android.util.Base64.DEFAULT)
+
+        val audio = hashMapOf(
+            "audio" to base64String
+        )
+
+        db.collection("user")
+            .document(SessionManager.getCurrentUser()!!)
+            .collection("audio")
+            .document(fileName)
+            .set(audio)
+            .addOnSuccessListener { Log.d("database", "DocumentSnapshot successfully written!") }
+            .addOnFailureListener { e -> Log.w("database", "Error writing document", e) }
+    }
+
     private fun retrieveFileFromLocalStorage(fileName: String): ByteArray? {
         try {
-            file = File(filesDir, fileName)
+            val userFolder = File(filesDir, SessionManager.getCurrentUser()!!)
+            file = File(userFolder, fileName)
 //            Log.d("file", filesDir.listFiles()?.forEach {
 //                Log.d("file", it.delete().toString())
 //          }.toString())
@@ -186,6 +203,7 @@ class DashboardFragment : Fragment() {
         userFolder.listFiles()?.forEach {
             it.delete()
         }
+        numberOfFiles = 0
         updateRecyclerView()
     }
 
