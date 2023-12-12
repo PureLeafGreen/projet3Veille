@@ -6,7 +6,7 @@ import androidx.lifecycle.ViewModel
 
 class AuditeursViewModel : ViewModel() {
     private val _text = MutableLiveData<String>().apply {
-        value = "Vos auditeurs"
+        value = "Les auditeurs a suivre"
     }
     val text: LiveData<String> = _text
 }

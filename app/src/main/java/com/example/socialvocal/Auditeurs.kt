@@ -7,8 +7,11 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.socialvocal.databinding.FragmentAuditeursBinding
 import com.example.socialvocal.databinding.FragmentDashboardBinding
+import com.example.socialvocal.sessionManagement.SessionManager
 import com.example.socialvocal.ui.dashboard.DashboardViewModel
 
 // TODO: Rename parameter arguments, choose names that match
@@ -25,6 +28,8 @@ class Auditeurs : Fragment() {
     // TODO: Rename and change types of parameters
     private var param1: String? = null
     private var param2: String? = null
+    private lateinit var rvAuditeur: RecyclerView
+    private lateinit var adapter: AuditeurAdapter
 
 
     private var _binding: FragmentAuditeursBinding? = null
@@ -52,6 +57,25 @@ class Auditeurs : Fragment() {
             textView.text = it
         }
         return root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        rvAuditeur = view.findViewById(R.id.rvAuditeur) as RecyclerView
+        adapter = AuditeurAdapter(getAuditeurs())
+        rvAuditeur.adapter = adapter
+        rvAuditeur.layoutManager = LinearLayoutManager(this.context)
+    }
+
+    private fun getAuditeurs(): List<String> {
+        val listUser = mutableListOf<String>()
+        val listAllUser = SessionManager.getListUser()
+        for (user in listAllUser) {
+            if (user != SessionManager.getCurrentUser()) {
+                listUser.add(user)
+            }
+        }
+        return listUser.toList()
     }
 
     companion object {

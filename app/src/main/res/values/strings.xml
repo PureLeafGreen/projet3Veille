@@ -5,11 +5,12 @@
     <string name="title_notifications">Notifications</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
-    <string name="vos_auditeurs">Vos auditeurs</string>
     <string name="auditeurs">Auditeurs</string>
     <string name="record">Enregistrement</string>
     <string name="listen">Ecouter</string>
     <string name="user1">User 1</string>
     <string name="user2">User 2</string>
     <string name="user3">User 3</string>
+    <string name="username">Username</string>
+    <string name="follow">Suivre</string>
 </resources>
