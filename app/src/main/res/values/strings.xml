@@ -9,4 +9,7 @@
     <string name="auditeurs">Auditeurs</string>
     <string name="record">Enregistrement</string>
     <string name="listen">Ecouter</string>
+    <string name="user1">User 1</string>
+    <string name="user2">User 2</string>
+    <string name="user3">User 3</string>
 </resources>

@@ -19,6 +19,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.socialvocal.R
 import com.example.socialvocal.databinding.FragmentDashboardBinding
+import com.example.socialvocal.sessionManagement.SessionManager
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import java.io.File
@@ -104,12 +105,17 @@ class DashboardFragment : Fragment() {
         } else {
             numberOfFiles++
         }
-        outputFile = File(filesDir, "audio_record${numberOfFiles}.mp3")
+        //create folder for user
+        val userFolder = File(filesDir, SessionManager.getCurrentUser()!!)
+        if (!userFolder.exists()) {
+            userFolder.mkdir()
+        }
+        outputFile = File(userFolder, "audio_record${numberOfFiles}.mp3")
         mediaRecorder = MediaRecorder().apply {
             setAudioSource(MediaRecorder.AudioSource.MIC)
             setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
             setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
-            setOutputFile(filesDir.absolutePath + "/audio_record${numberOfFiles}.mp3")
+            setOutputFile(filesDir.absolutePath + "/${SessionManager.getCurrentUser()}/audio_record${numberOfFiles}.mp3")
 
             try {
                 prepare()
@@ -168,16 +174,19 @@ class DashboardFragment : Fragment() {
 
     private fun getAllFilesNames(): List<String> {
         val files = mutableListOf<String>()
-        filesDir.listFiles()?.forEach {
+        val userFolder = File(filesDir, SessionManager.getCurrentUser()!!)
+        userFolder.listFiles()?.forEach {
             files.add(it.name)
         }
         return files.toList()
     }
 
     private fun deleteAllFiles() {
-        filesDir.listFiles()?.forEach {
+        val userFolder = File(filesDir, SessionManager.getCurrentUser()!!)
+        userFolder.listFiles()?.forEach {
             it.delete()
         }
+        updateRecyclerView()
     }
 
     private fun deleteFile(fileName: String) {

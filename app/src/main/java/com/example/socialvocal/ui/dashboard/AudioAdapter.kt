@@ -12,6 +12,7 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.socialvocal.R
+import com.example.socialvocal.sessionManagement.SessionManager
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -51,7 +52,8 @@ class AudioAdapter(private val fileNameList: List<String>) : RecyclerView.Adapte
     }
 
     fun playAudio(fileName: String) {
-        val file = File(filesDir, fileName)
+        val userFolder = File(filesDir, SessionManager.getCurrentUser()!!)
+        val file = File(userFolder, fileName)
 
         if (file.exists()) {
             try {
