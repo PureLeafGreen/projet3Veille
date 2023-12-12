@@ -14,6 +14,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:backgroundTint="@color/red" android:text="@string/listen"
-        android:textColor="@color/black"/>
+        android:backgroundTint="@color/red"
+        android:text="@string/listen" android:textColor="@color/black"/>
 </LinearLayout>

@@ -2,50 +2,46 @@ package com.example.socialvocal.ui.dashboard
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.media.AudioFormat
+import android.media.AudioRecord
+import android.media.MediaRecorder
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
+import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
-import com.example.socialvocal.R
-import com.example.socialvocal.databinding.FragmentDashboardBinding
-import android.media.AudioFormat
-import android.media.AudioRecord
-import android.os.Environment
-import android.util.Log
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.socialvocal.R
+import com.example.socialvocal.databinding.FragmentDashboardBinding
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
-import kotlin.random.Random
 
 class DashboardFragment : Fragment() {
 
     private var _binding: FragmentDashboardBinding? = null
+    //Const
+    private val RECORD_AUDIO_PERMISSION_CODE: Int = 1001
 
-    // This property is only valid between onCreateView and
-    // onDestroyView.
+    private var mediaRecorder: MediaRecorder? = null
     private val binding get() = _binding!!
-    private var recorder: AudioRecord? = null
     private var isRecording = false
     private lateinit var outputFile: File
-    private val bufferSize = AudioRecord.getMinBufferSize(
-        44100,
-        AudioFormat.CHANNEL_IN_MONO,
-        AudioFormat.ENCODING_PCM_16BIT
-    )
-    private val REQUEST_CODE_PERMISSION = 1001 // You can use any unique value here
-    private var retrievedFiles = mutableListOf<File>()
     private var file: File? = null
     private lateinit var filesDir: File
+    private lateinit var rvAudio: RecyclerView
+    private lateinit var adapter: AudioAdapter
     var numberOfFiles = 0
+    var db = Firebase.firestore
 
     override fun onCreateView(
             inflater: LayoutInflater,
@@ -66,60 +62,89 @@ class DashboardFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        // Find your button by its ID
-        val recordButton: Button = view.findViewById(R.id.button)
-        val rvAudio = view.findViewById(R.id.AudioRecycler) as RecyclerView
-        val list = listOf("test1", "test2", "test3")
-        val adapter = AudioAdapter(list)
-        rvAudio.adapter = adapter
-        rvAudio.layoutManager = LinearLayoutManager(this.context)
+        //init filesVariables
         filesDir = requireContext().filesDir
         numberOfFiles = filesDir.listFiles()?.size ?: 0
+        // Find your button by its ID
+        val recordButton: Button = view.findViewById(R.id.button)
+        val deleteAllButton: Button = view.findViewById(R.id.deleteAll)
+        //init recyclerView
+        rvAudio = view.findViewById(R.id.AudioRecycler) as RecyclerView
+        adapter = AudioAdapter(getAllFilesNames())
+        rvAudio.adapter = adapter
+        rvAudio.layoutManager = LinearLayoutManager(this.context)
         // Set an OnClickListener to the button
         recordButton.setOnClickListener {
-            // Call your function here when the button is pressed
-            startRecording()
+            if (!isRecording) {
+                startRecording()
+            } else {
+                stopRecording()
+            }
+        }
+        deleteAllButton.setOnClickListener {
+            deleteAllFiles()
+            updateRecyclerView()
         }
     }
     private fun startRecording() {
-        if (!isRecording) {
-            if (numberOfFiles == 0) {
-                numberOfFiles = 1
-            } else {
-                numberOfFiles++
-            }
-            outputFile = File(filesDir, "audio_record${numberOfFiles}.pcm")
-            val audioData = ByteArray(bufferSize)
-            recorder?.startRecording()
-            isRecording = true
-            Thread {
-                try {
-                    val outputStream = FileOutputStream(outputFile)
-                    while (isRecording) {
-                        val numberOfBytes = recorder?.read(audioData, 0, bufferSize)
-                        if (numberOfBytes != null) {
-                            outputStream.write(audioData, 0, numberOfBytes)
-                        }
-//                        //random byte
-//                        val randomByte = Random.nextInt(0, 255).toByte()
-//                        outputStream.write(randomByte.toInt())
-                        Log.d("send", String(byteArrayOf(numberOfBytes?.toByte() ?: 0)))
-                    }
-                    outputStream.close()
-                } catch (e: IOException) {
-                    e.printStackTrace()
-                }
-            }.start()
-            binding.button.text = "Arrêter"
-        } else {
-            isRecording = false
-            recorder?.stop()
-            recorder?.release()
-            binding.button.text = "Enregistrer"
+        if (ActivityCompat.checkSelfPermission(
+                this.context!!,
+                Manifest.permission.RECORD_AUDIO
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                this.activity!!,
+                arrayOf(Manifest.permission.RECORD_AUDIO),
+                RECORD_AUDIO_PERMISSION_CODE
+            )
+            return
         }
+        if (numberOfFiles == 0) {
+            numberOfFiles = 1
+        } else {
+            numberOfFiles++
+        }
+        outputFile = File(filesDir, "audio_record${numberOfFiles}.mp3")
+        mediaRecorder = MediaRecorder().apply {
+            setAudioSource(MediaRecorder.AudioSource.MIC)
+            setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
+            setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
+            setOutputFile(filesDir.absolutePath + "/audio_record${numberOfFiles}.mp3")
+
+            try {
+                prepare()
+                start()
+                isRecording = true
+            } catch (e: IOException) {
+                Log.e("Recording", "MediaRecorder preparation failed: ${e.message}")
+            }
+        }
+        binding.button.text = "Arrêter"
     }
 
+    private fun stopRecording() {
+        mediaRecorder?.apply {
+            try {
+                stop()
+                reset()
+                release()
+                isRecording = false
+                Log.d("Recording", "Recording stopped. File saved at $outputFile")
+            } catch (e: Exception) {
+                Log.e("Recording", "MediaRecorder stop/release failed: ${e.message}")
+            }
+        }
+        db.collection("audio").document(outputFile.name)
+            .set(mapOf("audio" to retrieveFileFromLocalStorage("audio_record${numberOfFiles}.mp3")))
+            .addOnSuccessListener {
+                Log.d("Recording", "DocumentSnapshot successfully written!")
+            }
+            .addOnFailureListener { e ->
+                Log.w("Recording", "Error writing document", e)
+            }
+        binding.button.text = "Enregistrer"
+        updateRecyclerView()
+    }
     private fun retrieveFileFromLocalStorage(fileName: String): ByteArray? {
         try {
             file = File(filesDir, fileName)
@@ -146,7 +171,7 @@ class DashboardFragment : Fragment() {
         filesDir.listFiles()?.forEach {
             files.add(it.name)
         }
-        return files
+        return files.toList()
     }
 
     private fun deleteAllFiles() {
@@ -157,6 +182,12 @@ class DashboardFragment : Fragment() {
 
     private fun deleteFile(fileName: String) {
         File(filesDir, fileName).delete()
+    }
+
+    private fun updateRecyclerView() {
+        adapter = AudioAdapter(getAllFilesNames())
+        rvAudio.adapter = adapter
+        rvAudio.layoutManager = LinearLayoutManager(this.context)
     }
 
     override fun onDestroyView() {
