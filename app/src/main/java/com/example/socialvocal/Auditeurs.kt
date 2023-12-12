@@ -1,18 +1,26 @@
 package com.example.socialvocal
 
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.socialvocal.databinding.FragmentAuditeursBinding
 import com.example.socialvocal.databinding.FragmentDashboardBinding
 import com.example.socialvocal.sessionManagement.SessionManager
 import com.example.socialvocal.ui.dashboard.DashboardViewModel
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -31,9 +39,9 @@ class Auditeurs : Fragment() {
     private lateinit var rvAuditeur: RecyclerView
     private lateinit var adapter: AuditeurAdapter
 
-
     private var _binding: FragmentAuditeursBinding? = null
     private val binding get() = _binding!!
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
@@ -62,39 +70,48 @@ class Auditeurs : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         rvAuditeur = view.findViewById(R.id.rvAuditeur) as RecyclerView
-        adapter = AuditeurAdapter(getAuditeurs())
+        adapter = AuditeurAdapter(emptyList())
         rvAuditeur.adapter = adapter
         rvAuditeur.layoutManager = LinearLayoutManager(this.context)
-    }
 
-    private fun getAuditeurs(): List<String> {
-        val listUser = mutableListOf<String>()
-        val listAllUser = SessionManager.getListUser()
-        for (user in listAllUser) {
-            if (user != SessionManager.getCurrentUser()) {
-                listUser.add(user)
-            }
+        lifecycleScope.launch {
+            val auditeurs = getAuditeurs()
+            adapter.updateData(auditeurs) // Assuming you have a method in the adapter to update data
         }
-        return listUser.toList()
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment Auditeurs.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            Auditeurs().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
+    companion object lesAuditeurs {
+        val db = FirebaseFirestore.getInstance()
+
+        suspend fun getAuditeurs(): List<String> {
+            val listUser = mutableListOf<String>()
+            val listAllUser = SessionManager.getListUser()
+            val listDbUser = getDbAuditeurs()
+            Log.d("listDbUser", listDbUser.toString())
+            for (user in listAllUser) {
+                if (user != SessionManager.getCurrentUser() && !listDbUser.contains(user)) {
+                    listUser.add(user)
                 }
             }
+            return listUser.toList()
+        }
+
+        suspend fun getDbAuditeurs(): List<String> {
+            val listDbUser = mutableListOf<String>()
+            val querySnapshot = db.collection("user")
+                .document(SessionManager.getCurrentUser()!!)
+                .collection("following")
+                .get()
+                .await()
+
+            for (document in querySnapshot.documents) {
+                val username = document.getString("username")
+                if (username != null) {
+                    listDbUser.add(username)
+                    Log.d("user", username)
+                }
+            }
+            return listDbUser.toList()
+        }
     }
 }
