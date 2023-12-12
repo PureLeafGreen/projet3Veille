@@ -48,7 +48,6 @@ class HomeFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        Log.d("user", SessionManager.getCurrentUser().toString())
         val swUser1: Button = binding.swUser1
         val swUser2: Button = binding.swUser2
         val swUser3: Button = binding.swUser3

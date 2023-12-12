@@ -87,7 +87,6 @@ class Auditeurs : Fragment() {
             val listUser = mutableListOf<String>()
             val listAllUser = SessionManager.getListUser()
             val listDbUser = getDbAuditeurs()
-            Log.d("listDbUser", listDbUser.toString())
             for (user in listAllUser) {
                 if (user != SessionManager.getCurrentUser() && !listDbUser.contains(user)) {
                     listUser.add(user)
@@ -108,7 +107,6 @@ class Auditeurs : Fragment() {
                 val username = document.getString("username")
                 if (username != null) {
                     listDbUser.add(username)
-                    Log.d("user", username)
                 }
             }
             return listDbUser.toList()

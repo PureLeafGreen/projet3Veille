@@ -171,13 +171,6 @@ class DashboardFragment : Fragment() {
         try {
             val userFolder = File(filesDir, SessionManager.getCurrentUser()!!)
             file = File(userFolder, fileName)
-//            Log.d("file", filesDir.listFiles()?.forEach {
-//                Log.d("file", it.delete().toString())
-//          }.toString())
-            Log.d("file", file!!.toString())
-            Log.d("file", file!!.readBytes().toString())
-            Log.d("file", file!!.delete().toString())
-            Log.d("file", filesDir.listFiles()?.size.toString())
             val inputStream = FileInputStream(file)
             val bytes = inputStream.readBytes()
             inputStream.close()
