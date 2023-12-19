@@ -9,19 +9,28 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.socialvocal.R
 import com.example.socialvocal.sessionManagement.SessionManager
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
 
-class AudioAdapter(private val fileNameList: List<String>) : RecyclerView.Adapter<AudioAdapter.ViewHolder>() {
+class AudioAdapter(private val fileNameList: List<String>, private val fileDeleteListener: FileDeleteListener) : RecyclerView.Adapter<AudioAdapter.ViewHolder>() {
     private lateinit var filesDir: File
+    var db = Firebase.firestore
+    private lateinit var audioItem: LinearLayout
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val textView: TextView = itemView.findViewById(R.id.AudioFile)
+    }
+
+    interface FileDeleteListener {
+        fun deleteFile(fileName: String)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -42,8 +51,13 @@ class AudioAdapter(private val fileNameList: List<String>) : RecyclerView.Adapte
         val textview = holder.textView
         textview.text = nomAudio
         val listenButton: Button = holder.itemView.findViewById(R.id.buttonListen)
+        audioItem = holder.itemView.findViewById(R.id.AudioItem)
         listenButton.setOnClickListener {
             playAudio(nomAudio)
+        }
+        audioItem.setOnLongClickListener {
+            deleteFile(it.findViewById<TextView>(R.id.AudioFile).text.toString())
+            true
         }
     }
 
@@ -81,5 +95,25 @@ class AudioAdapter(private val fileNameList: List<String>) : RecyclerView.Adapte
             // Handle case where file doesn't exist
             println("File $fileName does not exist in filesDir")
         }
+    }
+
+    private fun deleteFile(fileName: String) {
+        fileDeleteListener.deleteFile(fileName)
+        val userFolder = File(filesDir, SessionManager.getCurrentUser()!!)
+        userFolder.listFiles()?.forEach {
+            if (it.name == fileName) {
+                it.delete()
+            }
+        }
+        db.collection("user")
+            .document(SessionManager.getCurrentUser()!!)
+            .collection("audio")
+            .document(fileName)
+            .delete()
+            .addOnSuccessListener { Log.d("database", "DocumentSnapshot successfully deleted!") }
+            .addOnFailureListener { e -> Log.w("database", "Error deleting document", e) }
+        notifyItemRemoved(fileNameList.indexOf(fileName))
+        notifyItemRemoved(audioItem.indexOfChild(audioItem.findViewById(R.id.AudioFile)))
+        notifyDataSetChanged()
     }
 }

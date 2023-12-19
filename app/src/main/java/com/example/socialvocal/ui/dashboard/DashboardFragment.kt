@@ -11,6 +11,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
@@ -27,7 +28,7 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
 
-class DashboardFragment : Fragment() {
+class DashboardFragment : Fragment(), AudioAdapter.FileDeleteListener {
 
     private var _binding: FragmentDashboardBinding? = null
     //Const
@@ -71,7 +72,7 @@ class DashboardFragment : Fragment() {
         val deleteAllButton: Button = view.findViewById(R.id.deleteAll)
         //init recyclerView
         rvAudio = view.findViewById(R.id.AudioRecycler) as RecyclerView
-        adapter = AudioAdapter(getAllFilesNames())
+        adapter = AudioAdapter(getAllFilesNames(), this)
         rvAudio.adapter = adapter
         rvAudio.layoutManager = LinearLayoutManager(this.context)
         // Set an OnClickListener to the button
@@ -196,16 +197,29 @@ class DashboardFragment : Fragment() {
         userFolder.listFiles()?.forEach {
             it.delete()
         }
+        db.collection("user")
+            .document(SessionManager.getCurrentUser()!!)
+            .collection("audio")
+            .get()
+            .addOnSuccessListener { documents ->
+                for (document in documents) {
+                    document.reference.delete()
+                }
+            }
+            .addOnFailureListener { exception ->
+                Log.w("database", "Error getting documents: ", exception)
+            }
         numberOfFiles = 0
         updateRecyclerView()
     }
 
-    private fun deleteFile(fileName: String) {
-        File(filesDir, fileName).delete()
+    override fun deleteFile(fileName: String) {
+        numberOfFiles--
+        updateRecyclerView()
     }
 
     private fun updateRecyclerView() {
-        adapter = AudioAdapter(getAllFilesNames())
+        adapter = AudioAdapter(getAllFilesNames(), this)
         rvAudio.adapter = adapter
         rvAudio.layoutManager = LinearLayoutManager(this.context)
     }
